@@ -105,3 +105,40 @@ public class UDPClient {
                         System.err.println("Block timeout: " + start + "-" + end);
                         break;
                     }
+
+                    parts = response.split(" ");
+                    if (!parts[0].equals("FILE") || !parts[2].equals("OK")) 
+                    {
+                        System.err.println("Invalid data response: " + response);
+                        break;
+                    }
+
+                    // Extract Base64 data
+                    int dataIndex = 0;
+                    for (int i = 0; i < parts.length; i++) 
+                    {
+                        if (parts[i].equals("DATA")) 
+                        {
+                            dataIndex = i + 1;
+                            break;
+                        }
+                    }
+
+                    if (dataIndex == 0) 
+                    {
+                        System.err.println("No data in response: " + response);
+                        break;
+                    }
+
+                    StringBuilder base64Data = new StringBuilder();
+                    for (int i = dataIndex; i < parts.length; i++) 
+                    {
+                        base64Data.append(parts[i]).append(" ");
+                    }
+
+                    byte[] data = Base64.getDecoder().decode(base64Data.toString().trim());
+                    bos.write(data);
+                    downloaded += data.length;
+
+                    System.out.print("*"); // Show progress
+                }
