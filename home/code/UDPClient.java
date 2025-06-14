@@ -49,3 +49,37 @@ public class UDPClient {
         }
     }
 
+    private static void downloadFile(DatagramSocket socket, InetAddress serverAddress, int serverPort, String filename) 
+    {
+        try {
+            System.out.println("Starting to download file: " + filename);
+
+            // Send DOWNLOAD request
+            String downloadRequest = "DOWNLOAD " + filename;
+            String response = sendAndReceive(socket, serverAddress, serverPort, downloadRequest);
+
+            if (response == null) 
+            {
+                System.err.println("No response to download request");
+                return;
+            }
+            String[] parts = response.split(" ");
+            if (parts[0].equals("ERR")) 
+            {
+                System.out.println("File not found on server: " + filename);
+                return;
+            } else if (!parts[0].equals("OK")) 
+            {
+                System.err.println("Invalid response: " + response);
+                return;
+            }
+
+            // Parse file size and data port
+            int fileSize = 0, dataPort = 0;
+            for (int i = 0; i < parts.length; i++) 
+            {
+                if (parts[i].equals("SIZE")) fileSize = Integer.parseInt(parts[i + 1]);
+                if (parts[i].equals("PORT")) dataPort = Integer.parseInt(parts[i + 1]);
+            }
+
+            System.out.println("File size: " + fileSize + " bytes, Data port: " + dataPort);
