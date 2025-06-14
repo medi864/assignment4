@@ -162,4 +162,7 @@ public class UDPServer {
     }
 }
 
+//terminal:javac -d bin home/code/*.java
+//terminal:java -cp bin home.code.UDPServer 51234
+//terminal:java -cp bin home.code.UDPClient localhost 51234 home/files.txt
 
