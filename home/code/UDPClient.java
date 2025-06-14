@@ -169,6 +169,40 @@ public class UDPClient {
         }
     }
 
-    private static String sendAndReceive(DatagramSocket socket, InetAddress address, int port, String message) {
+    private static String sendAndReceive(DatagramSocket socket, InetAddress address, int port, String message) 
+    {
         int timeout = INITIAL_TIMEOUT;
         int retries = 0;
+        while (retries < MAX_RETRIES) 
+        {
+            try 
+            {
+                socket.setSoTimeout(timeout);
+
+                // Send request
+                byte[] sendData = message.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, port);
+                socket.send(sendPacket);
+
+                // Receive response
+                byte[] receiveData = new byte[4096];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                socket.receive(receivePacket);
+
+                return new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
+            } catch (SocketTimeoutException e) 
+            {
+                retries++;
+                System.out.println("Timeout retry: " + retries + "/" + MAX_RETRIES + ", Timeout: " + timeout + "ms");
+                timeout *= 2;
+            } catch (IOException e) 
+            {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        System.out.println("Max retries reached, giving up");
+        return null;
+    }
+}
