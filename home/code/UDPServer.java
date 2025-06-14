@@ -142,5 +142,24 @@ public class UDPServer {
             e.printStackTrace();
         }
     }
+    private static int allocateDataPort() {
+        return DATA_PORT_MIN + random.nextInt(DATA_PORT_MAX - DATA_PORT_MIN + 1);
+    }
+
+    private static void sendResponse(DatagramSocket socket, DatagramPacket packet, String message) {
+        sendResponse(socket, packet.getAddress(), packet.getPort(), message);
+    }
+
+    private static void sendResponse(DatagramSocket socket, InetAddress address, int port, String message) {
+        try {
+            byte[] sendData = message.getBytes();
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, port);
+            socket.send(sendPacket);
+            System.out.println("Sent response: " + message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
 
 
