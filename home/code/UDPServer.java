@@ -37,3 +37,41 @@ public class UDPServer {
             e.printStackTrace();
         }
     }
+
+    private static void handleClientRequest(DatagramSocket welcomeSocket, DatagramPacket receivePacket) {
+        String request = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
+        String[] parts = request.split(" ");
+
+        if (parts.length < 2 || !parts[0].equals("DOWNLOAD")) {
+            System.out.println("Invalid request: " + request);
+            sendResponse(welcomeSocket, receivePacket, "ERR INVALID_REQUEST");
+            return;
+        }
+
+        String filename = parts[1];
+        // Note the path! Server files are in home/server_files directory
+        File file = new File("home/server_files/" + filename); 
+
+        if (!file.exists()) {
+            sendResponse(welcomeSocket, receivePacket, "ERR " + filename + " NOT_FOUND");
+            return;
+        }
+
+        try {
+            InetAddress clientAddress = receivePacket.getAddress();
+            int clientPort = receivePacket.getPort();
+            int dataPort = allocateDataPort();
+
+            // Send OK response (with file size and data port)
+            long fileSize = file.length();
+            String okResponse = "OK " + filename + " SIZE " + fileSize + " PORT " + dataPort;
+            sendResponse(welcomeSocket, clientAddress, clientPort, okResponse);
+
+            System.out.println("Preparing to send file: " + filename + ", Size: " + fileSize + ", Data port: " + dataPort);
+
+            // Start data transfer thread
+            new Thread(() -> handleDataTransfer(dataPort, file, clientAddress, clientPort)).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
