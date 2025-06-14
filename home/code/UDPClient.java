@@ -142,3 +142,33 @@ public class UDPClient {
 
                     System.out.print("*"); // Show progress
                 }
+                System.out.println();
+
+                if (downloaded == fileSize)
+                {
+                    // Send close request
+                    String closeRequest = "FILE " + filename + " CLOSE";
+                    response = sendAndReceive(socket, serverAddress, dataPort, closeRequest);
+
+                    // Simplified verification for close response
+                    if (response != null && response.contains("CLOSE_OK")) 
+                    {
+                        System.out.println("File " + filename + " download completed");
+                    } else 
+                    {
+                        System.err.println("Close failed, response: " + (response == null ? "none" : response));
+                    }
+                } else 
+                {
+                    System.err.println("Incomplete download: " + downloaded + "/" + fileSize + " bytes");
+                }
+            }
+        } catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static String sendAndReceive(DatagramSocket socket, InetAddress address, int port, String message) {
+        int timeout = INITIAL_TIMEOUT;
+        int retries = 0;
