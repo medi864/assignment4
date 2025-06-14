@@ -83,3 +83,25 @@ public class UDPClient {
             }
 
             System.out.println("File size: " + fileSize + " bytes, Data port: " + dataPort);
+
+            try (FileOutputStream fos = new FileOutputStream(filename);
+                 BufferedOutputStream bos = new BufferedOutputStream(fos)) 
+                 {
+
+                int blockSize = 1000;
+                int downloaded = 0;
+
+                while (downloaded < fileSize) 
+                {
+                    int start = downloaded;
+                    int end = Math.min(downloaded + blockSize - 1, fileSize - 1);
+
+                    // Send block request
+                    String fileRequest = "FILE " + filename + " GET START " + start + " END " + end;
+                    response = sendAndReceive(socket, serverAddress, dataPort, fileRequest);
+
+                    if (response == null) 
+                    {
+                        System.err.println("Block timeout: " + start + "-" + end);
+                        break;
+                    }
